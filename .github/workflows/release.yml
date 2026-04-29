@@ -35,32 +35,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - name: Pre-publish diagnostics
-        run: |
-          echo "::group::npm + node versions"
-          which node && node --version
-          which npm  && npm --version
-          echo "::endgroup::"
-          echo "::group::OIDC env vars"
-          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
-            echo "ACTIONS_ID_TOKEN_REQUEST_URL is SET"
-          else
-            echo "ACTIONS_ID_TOKEN_REQUEST_URL is MISSING"
-          fi
-          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
-            echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN is SET (value redacted by GitHub)"
-          else
-            echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN is MISSING"
-          fi
-          echo "::endgroup::"
-          echo "::group::npm config"
-          echo "registry: $(npm config get registry)"
-          echo "userconfig: $(npm config get userconfig)"
-          echo "always-auth: $(npm config get always-auth 2>/dev/null || echo unset)"
-          echo "::endgroup::"
-          echo "::group::.npmrc contents (npm tokens auto-redacted by GitHub)"
-          cat "$(npm config get userconfig)" 2>/dev/null || echo "no userconfig"
-          echo "::endgroup::"
       - name: Publish to npm via Trusted Publishing
         env:
           # Belt-and-braces: force any leaked static token to empty so npm
@@ -70,7 +44,7 @@ jobs:
           # stale NPM_TOKEN secret still leaking in from the npm-publish
           # environment's secret store.
           NODE_AUTH_TOKEN: ""
-        run: npm publish --provenance --access public --loglevel verbose
+        run: npm publish --provenance --access public
 
   build-binaries:
     strategy:
