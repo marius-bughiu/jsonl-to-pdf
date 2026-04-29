@@ -17,17 +17,29 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          # npm >= 11.5.1 is needed for OIDC / Trusted Publishing.
+          # Node 22 ships with npm 10.x which CANNOT do full Trusted
+          # Publishing on its own — it signs the provenance attestation via
+          # OIDC but still uses NODE_AUTH_TOKEN from .npmrc for the actual
+          # PUT. The `npm install -g npm@latest` step below upgrades to
+          # npm 11.5.1+ which exchanges the OIDC token for a short-lived
+          # publish token and uses that for PUT too.
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest
+      - run: npm --version
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      # No NODE_AUTH_TOKEN — auth happens via OIDC against the trusted
-      # publisher configured on npmjs.com.
-      - run: npm publish --provenance --access public
+      - name: Publish to npm via Trusted Publishing
+        env:
+          # Force the OIDC publish path. If a stale NPM_TOKEN secret is
+          # still being injected from somewhere, this overrides it with
+          # an empty string so .npmrc's ${NODE_AUTH_TOKEN} resolves to
+          # nothing and npm 11+ falls through to OIDC token exchange.
+          NODE_AUTH_TOKEN: ""
+        run: npm publish --provenance --access public
 
   build-binaries:
     strategy:
