@@ -1,6 +1,6 @@
 {
   "name": "jsonl-to-pdf",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Turn AI coding agent sessions (Claude Code today, more soon) into shareable PDFs.",
   "keywords": [
     "claude",
@@ -17,8 +17,8 @@
   "author": "Marius Bughiu",
   "type": "module",
   "bin": {
-    "jsonl-to-pdf": "./dist/cli.js",
-    "j2pdf": "./dist/cli.js"
+    "jsonl-to-pdf": "dist/cli.js",
+    "j2pdf": "dist/cli.js"
   },
   "files": [
     "dist",

@@ -26,6 +26,11 @@ jobs:
           node-version: 24
           cache: npm
           registry-url: https://registry.npmjs.org
+      # Node 24 ships with npm 11.0.x; full Trusted Publishing (OIDC for
+      # PUT auth, not just provenance signing) needs npm 11.5.1+. Upgrade
+      # before publish. This works on Node 24's clean toolcache where it
+      # didn't on Node 22's corrupted one.
+      - run: npm install -g npm@latest --force
       - run: npm --version
       - run: npm ci
       - run: npm run typecheck
