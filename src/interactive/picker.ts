@@ -15,6 +15,14 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
 }
 
+function pickerMaxItems(): number {
+  // @clack/prompts windows the select list when maxItems < options.length.
+  // Reserve ~7 rows for intro/header/padding/next-prompt; floor at 5 (clack's
+  // minimum).
+  const rows = process.stdout.rows ?? 24;
+  return Math.max(5, rows - 7);
+}
+
 function formatRelative(d: Date): string {
   const diffMs = Date.now() - d.getTime();
   const m = Math.floor(diffMs / 60000);
@@ -58,6 +66,7 @@ export async function pickSession(): Promise<PickResult> {
   const project = await select({
     message: "Project",
     options: projectChoices,
+    maxItems: pickerMaxItems(),
   });
   if (isCancel(project)) {
     cancel("Cancelled.");
@@ -73,6 +82,7 @@ export async function pickSession(): Promise<PickResult> {
         pc.dim(`  · ${formatRelative(s.modifiedAt)} · ${formatSize(s.sizeBytes)}`),
       value: s.sessionId,
     })),
+    maxItems: pickerMaxItems(),
   });
   if (isCancel(sessionChoice)) {
     cancel("Cancelled.");
