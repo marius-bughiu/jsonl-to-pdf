@@ -2,7 +2,12 @@ import { readdir, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, join } from "node:path";
 import { readJsonlLines } from "../parser/jsonl-stream.js";
-import { claudeProjectsRoot, decodeProjectDir, isReadableDir } from "./paths.js";
+import {
+  claudeProjectsRoot,
+  decodeProjectDir,
+  encodeProjectDir,
+  isReadableDir,
+} from "./paths.js";
 
 export interface SessionSummary {
   sessionId: string;
@@ -130,3 +135,50 @@ export async function listSessions(opts?: {
 }
 
 export { deriveTitle };
+
+/**
+ * Find the JSONL for the *current* Claude Code session.
+ *
+ * Claude Code stores sessions at `~/.claude/projects/<encoded-cwd>/<id>.jsonl`
+ * and is actively writing to the active session, so the most-recently-modified
+ * `.jsonl` in the project directory is a reliable proxy when no session id is
+ * exposed in the environment.
+ */
+export async function findCurrentSession(opts?: {
+  cwd?: string;
+  root?: string;
+}): Promise<SessionSummary | null> {
+  const cwd = opts?.cwd ?? process.cwd();
+  const root = opts?.root ?? claudeProjectsRoot();
+  const encoded = encodeProjectDir(cwd);
+  const projDir = join(root, encoded);
+  if (!isReadableDir(projDir)) return null;
+  let entries: string[];
+  try {
+    entries = await readdir(projDir);
+  } catch {
+    return null;
+  }
+  let best: SessionSummary | null = null;
+  for (const entry of entries) {
+    if (!entry.endsWith(".jsonl")) continue;
+    const filePath = join(projDir, entry);
+    let s;
+    try {
+      s = await stat(filePath);
+    } catch {
+      continue;
+    }
+    if (!s.isFile()) continue;
+    const summary: SessionSummary = {
+      sessionId: basename(entry, ".jsonl"),
+      projectDir: encoded,
+      projectPath: cwd,
+      filePath,
+      sizeBytes: s.size,
+      modifiedAt: s.mtime,
+    };
+    if (!best || summary.modifiedAt > best.modifiedAt) best = summary;
+  }
+  return best;
+}
