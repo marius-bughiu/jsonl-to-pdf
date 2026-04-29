@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+*.log
+
+# build artifacts
+*.pdf
+!docs/**/*.pdf
+
+# editor
+.vscode/
+.idea/
+.claude/settings.local.json

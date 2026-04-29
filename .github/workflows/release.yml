@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  npm-publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # npm >= 11.5.1 is needed for OIDC / Trusted Publishing.
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      # No NODE_AUTH_TOKEN — auth happens via OIDC against the trusted
+      # publisher configured on npmjs.com.
+      - run: npm publish --provenance --access public
+
+  build-binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            runner: ubuntu-latest
+            outfile: jsonl-to-pdf-linux-x64
+          - target: linux-arm64
+            runner: ubuntu-latest
+            outfile: jsonl-to-pdf-linux-arm64
+          - target: darwin-x64
+            runner: macos-13
+            outfile: jsonl-to-pdf-darwin-x64
+          - target: darwin-arm64
+            runner: macos-latest
+            outfile: jsonl-to-pdf-darwin-arm64
+          - target: win-x64
+            runner: windows-latest
+            outfile: jsonl-to-pdf-win-x64.exe
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile || bun install
+      - name: Compile
+        shell: bash
+        run: |
+          bun build --compile --target=bun-${{ matrix.target }} \
+            ./src/cli.ts --outfile dist/${{ matrix.outfile }}
+      - name: SHA256
+        shell: bash
+        run: |
+          cd dist
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            certutil -hashfile "${{ matrix.outfile }}" SHA256 | sed -n '2p' | tr -d ' \r' > "${{ matrix.outfile }}.sha256"
+          else
+            shasum -a 256 "${{ matrix.outfile }}" > "${{ matrix.outfile }}.sha256"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.outfile }}
+          path: |
+            dist/${{ matrix.outfile }}
+            dist/${{ matrix.outfile }}.sha256
+
+  release:
+    needs: [build-binaries]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Stage binaries
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name 'jsonl-to-pdf-*' -o -name '*.sha256' \) -exec cp {} release/ \;
+          (cd release && cat *.sha256 > SHA256SUMS && rm -f *.sha256) || true
+          ls -la release
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/jsonl-to-pdf-*
+            release/SHA256SUMS
+          generate_release_notes: true

@@ -1,0 +1,2 @@
+{"parentUuid":null,"isSidechain":true,"agentId":"test001","type":"user","message":{"role":"user","content":"Explore the files in detail"},"uuid":"sub-u1","timestamp":"2026-04-29T08:00:21.000Z"}
+{"parentUuid":"sub-u1","isSidechain":true,"type":"assistant","message":{"role":"assistant","model":"claude-haiku-4-5","content":[{"type":"text","text":"Two files found. file1.ts has 42 lines, file2.ts has 17 lines."}]},"uuid":"sub-a1","timestamp":"2026-04-29T08:00:25.000Z"}

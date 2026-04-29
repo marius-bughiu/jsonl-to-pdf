@@ -1,0 +1,59 @@
+{
+  "name": "jsonl-to-pdf",
+  "version": "0.1.0",
+  "description": "Turn AI coding agent sessions (Claude Code today, more soon) into shareable PDFs.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "agent",
+    "pdf",
+    "jsonl",
+    "conversation",
+    "export",
+    "cli"
+  ],
+  "license": "MIT",
+  "author": "Marius Bughiu",
+  "type": "module",
+  "bin": {
+    "jsonl-to-pdf": "./dist/cli.js",
+    "j2pdf": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/post-build.mjs",
+    "dev": "tsx src/cli.ts",
+    "test": "tsx --test tests/adapter.test.ts tests/paths.test.ts tests/redact.test.ts",
+    "typecheck": "tsc --noEmit",
+    "compile:linux-x64": "bun build --compile --target=bun-linux-x64 ./src/cli.ts --outfile dist/jsonl-to-pdf-linux-x64",
+    "compile:linux-arm64": "bun build --compile --target=bun-linux-arm64 ./src/cli.ts --outfile dist/jsonl-to-pdf-linux-arm64",
+    "compile:darwin-x64": "bun build --compile --target=bun-darwin-x64 ./src/cli.ts --outfile dist/jsonl-to-pdf-darwin-x64",
+    "compile:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 ./src/cli.ts --outfile dist/jsonl-to-pdf-darwin-arm64",
+    "compile:win-x64": "bun build --compile --target=bun-windows-x64 ./src/cli.ts --outfile dist/jsonl-to-pdf-win-x64.exe"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "citty": "^0.1.6",
+    "pdfkit": "^0.15.0",
+    "picocolors": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/pdfkit": "^0.13.4",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marius-bughiu/jsonl-to-pdf.git"
+  }
+}
