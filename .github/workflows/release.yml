@@ -17,15 +17,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          # Node 24 ships with npm 11.x bundled, which can do full Trusted
-          # Publishing (OIDC token exchange for PUT auth, not just for
-          # provenance signing). On Node 22 the bundled npm 10.x can't do
-          # this AND has a known toolcache corruption that breaks
-          # `npm install -g npm@latest` with `Cannot find module
-          # 'promise-retry'`.
+          # Node 24 ships with npm 11.x bundled.
+          # IMPORTANT: do NOT pass `registry-url` here. It makes setup-node
+          # write a .npmrc with `_authToken=${NODE_AUTH_TOKEN}`, and once
+          # an _authToken is configured for the registry, npm CLI treats
+          # static auth as "configured" and skips the Trusted Publishing
+          # OIDC path entirely — even if NODE_AUTH_TOKEN is empty.
           node-version: 24
           cache: npm
-          registry-url: https://registry.npmjs.org
       # Node 24 ships with npm 11.0.x; full Trusted Publishing (OIDC for
       # PUT auth, not just provenance signing) needs npm 11.5.1+. Upgrade
       # before publish. This works on Node 24's clean toolcache where it
@@ -64,10 +63,12 @@ jobs:
           echo "::endgroup::"
       - name: Publish to npm via Trusted Publishing
         env:
-          # Force the OIDC publish path. If a stale NPM_TOKEN secret is
-          # still being injected from somewhere, this overrides it with
-          # an empty string so .npmrc's ${NODE_AUTH_TOKEN} resolves to
-          # nothing and npm 11+ falls through to OIDC token exchange.
+          # Belt-and-braces: force any leaked static token to empty so npm
+          # CLI doesn't try to authenticate with it. The real fix is the
+          # missing `registry-url` on setup-node (no _authToken line in
+          # .npmrc), but we keep this empty override to neutralise any
+          # stale NPM_TOKEN secret still leaking in from the npm-publish
+          # environment's secret store.
           NODE_AUTH_TOKEN: ""
         run: npm publish --provenance --access public
 
