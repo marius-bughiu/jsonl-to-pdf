@@ -17,7 +17,7 @@ if (argv.length === 0 || !KNOWN.has(argv[0])) {
 const main = defineCommand({
   meta: {
     name: "jsonl-to-pdf",
-    version: "0.1.1",
+    version: "0.1.2",
     description:
       "Turn AI coding-agent sessions (Claude Code today, more soon) into shareable PDFs.",
   },
