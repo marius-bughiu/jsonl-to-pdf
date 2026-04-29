@@ -70,7 +70,7 @@ jobs:
           # stale NPM_TOKEN secret still leaking in from the npm-publish
           # environment's secret store.
           NODE_AUTH_TOKEN: ""
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --loglevel verbose
 
   build-binaries:
     strategy:
