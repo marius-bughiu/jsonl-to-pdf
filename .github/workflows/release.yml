@@ -26,7 +26,10 @@ jobs:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
-      - run: npm install -g npm@latest
+      # `--force` works around npm 10's known self-upgrade bug where it
+      # deletes its own deps mid-install and then can't find them
+      # (e.g. `Cannot find module 'promise-retry'`).
+      - run: npm install -g npm@latest --force
       - run: npm --version
       - run: npm ci
       - run: npm run typecheck
