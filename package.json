@@ -1,6 +1,6 @@
 {
   "name": "jsonl-to-pdf",
-  "version": "0.1.12",
+  "version": "1.0.3",
   "description": "Turn AI coding agent sessions (Claude Code today, more soon) into shareable PDFs.",
   "keywords": [
     "claude",
